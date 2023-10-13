@@ -4,12 +4,13 @@ import os
 # input goes here
 top=50
 bottom=50
-left=50
-right=50
+left=20
+right=20
 
-input_directory='/home/vikram/img/test/'
+input_directory='/home/vikram/tmp/test/'
 
 def crop_pic(image_path):
+    print(image_path)
     # import sample picture
     image = cv2.imread(image_path)
 
@@ -26,15 +27,30 @@ def crop_pic(image_path):
 
     # Iterate over the detected faces and crop them
     for i, (x, y, w, h) in enumerate(faces):
-        x=int(x-x*left/100)
-        y=int(y-y*top/100)
-        w=int(w+w*right/100)
-        h=int(h+h*bottom/100)
+        x=int(x-w*left/100)
+        y=int(y-h*top/100)
+        w=int(w+2*w*right/100)
+        h=int(h+2*h*bottom/100)
         # Crop the face region from the image
         cropped_face = image[y:y + h, x:x + w]
 
-        # Save or display the cropped face
-        cv2.imwrite(image_path, cropped_face)  # Save the cropped face as a separate image
+        # check if face is detected
+        if cropped_face.size==0:
+            print(f'No face detected in {image_path}')
+            break
+
+        # Chech if there are multiple faces in the image
+        if i<1:
+            # replace the picture with the cropped face
+            cv2.imwrite(image_path, cropped_face)
+        else:
+            # Save the cropped face as a separate image
+
+            # separate the file name and extension
+            ext=image_path.split('.')[-1]
+            path_wo_ext=image_path.split('.')[0]
+
+            cv2.imwrite(f'{path_wo_ext}_{i}.{ext}', cropped_face)
 
 def process_directory(directory_path):
     # Iterate over all files and subdirectories in the given directory
@@ -44,7 +60,6 @@ def process_directory(directory_path):
         if os.path.isfile(item_path):
             # If it's a file, process it
             crop_pic(item_path)
-            print(item_path)
         elif os.path.isdir(item_path):
             # If it's a directory, recursively process it
             process_directory(item_path)
